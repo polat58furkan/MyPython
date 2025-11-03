@@ -1,0 +1,131 @@
+import tkinter as tk
+from plyer import notification
+from tkinter import ttk
+
+zero=0
+def countdown(seconds,barValue):
+    if seconds >= 0:
+        global zero
+        hrs = seconds // 3600
+        mins = (seconds % 3600) // 60
+        secs = seconds % 60
+        timer_label.config(text=f"{hrs:02d}:{mins:02d}:{secs:02d}")
+        
+        # Her adımda progress bar güncelle
+        progress['value'] = zero
+        zero += barValue
+        
+        # 1000 ms = 1 saniye sonra fonksiyonu tekrar çağır
+        root.after(1000, countdown, seconds-1,barValue)
+        
+    else:
+        timer_label.config(text="Time's up!")
+        print("Time's up!")
+        notification.notify(
+            title="🔥 Alarm",
+            message="Süre doldu Krall , Time's up Broo! ☕",
+            app_name="🔥 Alarm",
+            timeout=1 # saniye cinsinden, bildirimin ekranda kalma süresi
+        )
+        
+        # Spinbox'ları sıfırla
+        for spin in (myHour, myMinute, mySecond):
+            spin.delete(0, "end")
+            spin.insert(0, 0)
+            
+        # # Progress sıfırla
+        # progress['value'] = 0
+        # zero = 0
+        
+def StartTimer():
+    global zero
+    zero = 0  # Her yeni başlatmada sıfırla
+    try:
+        start_hour=int(myHour.get())
+        start_minute=int(myMinute.get())
+        start_second=int(mySecond.get())
+        if not (0 <= start_hour <= 23 and 0 <= start_minute <= 59 and 0 <= start_second <= 59):
+            raise ValueError
+        print(f"Starting time {start_hour}:{start_minute}:{start_second}")
+        total_seconds = start_hour*3600 + start_minute*60 + start_second
+        
+        # Progress bar değeri (100'e ulaşacak şekilde)
+        barValue = 100 / total_seconds
+        countdown(total_seconds, barValue)
+        
+    except ValueError:
+        timer_label.config(text="Invalid input!")
+
+
+
+# ---------------- Tkinter GUI ----------------
+root = tk.Tk()
+root.title("🔥 Alarm")
+
+# Arka planı değiştir
+root.configure(bg="#000000")  
+
+# Pencere boyutları
+window_width = 400
+window_height = 400
+
+# Ekran boyutlarını al
+screen_width = root.winfo_screenwidth()
+screen_height = root.winfo_screenheight()
+
+# Ortalamak için konumu hesapla
+x = int((screen_width / 2) - (window_width / 2))
+y = int((screen_height / 2) - (window_height / 2))
+
+# Pencere konumunu ve boyutunu ayarla
+root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+
+# Minimum ve maksimum boyutu sabitle
+root.minsize(400, 400)
+root.maxsize(400, 400)
+
+
+# Sol panel
+left_frame = tk.Frame(root, bg="#e0f7fa")
+left_frame.pack(side=tk.LEFT, padx=10, pady=10, fill=tk.BOTH, expand=True)
+
+# Başlık
+tk.Label(left_frame, text="Time", font=("Arial", 10, "bold"), width=10, bg="#6d99c5").pack(padx=10, pady=35)
+
+# Saat, Dakika, Saniye label ve spinbox'lar alt alta
+tk.Label(left_frame, text="Hour", font=("Arial", 10, "bold"), width=10, bg="#5a9dff").pack(padx=10, pady=5)
+myHour = tk.Spinbox(left_frame, from_=0, to=23, width=10, state="normal")
+myHour.pack(padx=10, pady=5)
+
+tk.Label(left_frame, text="Minute", font=("Arial", 10, "bold"), width=10, bg="#5a9dff").pack(padx=10, pady=5)
+myMinute = tk.Spinbox(left_frame, from_=0, to=59, width=10, state="normal")
+myMinute.pack(padx=10, pady=5)
+
+tk.Label(left_frame, text="Second", font=("Arial", 10, "bold"), width=10, bg="#5a9dff").pack(padx=10, pady=5)
+mySecond = tk.Spinbox(left_frame, from_=0, to=59, width=10, state="normal")
+mySecond.pack(padx=10, pady=5)
+
+
+# Progress bar widget
+progress = ttk.Progressbar(left_frame, orient = "horizontal",length = 150, mode = 'determinate')
+progress.pack(side=tk.TOP,pady=5)
+
+# Timer göstermek için
+timer_label = tk.Label(left_frame, text="", font=("Arial", 20))
+timer_label.pack(side=tk.BOTTOM,pady=20)
+
+
+
+# Sağ panel: 
+right_frame = tk.Frame(root, bg="#e0f7fa")
+right_frame.pack(side=tk.LEFT, padx=10, pady=10, fill=tk.BOTH, expand=False)
+
+tk.Label(right_frame, text="Start & Exit", font=("Arial", 10, "bold"),width=15, bg="#6d99c5").pack(padx=10,pady=35)
+
+button = tk.Button(right_frame, text='Start', width=10, command=StartTimer)
+button.pack(side=tk.TOP,pady=30)
+
+button2 = tk.Button(right_frame, text='Exit', width=10, command=root.destroy)
+button2.pack(side=tk.TOP,pady=30)
+
+root.mainloop()
